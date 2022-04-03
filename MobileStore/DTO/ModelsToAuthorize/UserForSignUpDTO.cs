@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MobileStore.DTO.AccountModels
+namespace MobileStore.DTO.ModelsToAuthorize
 {
     public class UserForSignUpDTO : AuthorizeModel
     {

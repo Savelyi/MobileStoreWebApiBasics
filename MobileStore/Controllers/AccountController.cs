@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using MobileStore.DTO.AccountModels;
+using MobileStore.DTO.ModelsToAuthorize;
 using MobileStore.Models;
 using System;
 using System.Collections.Generic;
@@ -34,7 +34,7 @@ namespace MobileStore.Controllers
             {
                 return BadRequest(new { errorText = "Invalid username or password." });
             }
-            var encodedJwt = Authenticate(user.UserName,user.RoleId.ToString());
+            var encodedJwt = Authenticate(user.UserName,db.Roles.FirstOrDefault(r => r.Id == user.RoleId).Name);
 
 
 
@@ -70,7 +70,8 @@ namespace MobileStore.Controllers
             };
             db.Users.Add(user);
             await db.SaveChangesAsync();
-            var encodedJwt=Authenticate(user.UserName,user.RoleId.ToString());
+            
+            var encodedJwt = Authenticate(user.UserName,db.Roles.FirstOrDefault(r=>r.Id==user.RoleId).Name);
             var response = new
             {
                 access_token = encodedJwt,
