@@ -1,8 +1,15 @@
-﻿namespace MobileStore.Models
+﻿using System.Collections.Generic;
+
+namespace MobileStore.Models
 {
-    public enum Role
+    public class Role
     {
-        Admin=0,
-        User=1
+        public Role()
+        {
+            Users=new HashSet<User>();
+        }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public ICollection<User> Users{ get; set; }
     }
 }
