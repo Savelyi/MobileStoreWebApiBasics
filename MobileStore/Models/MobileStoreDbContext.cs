@@ -11,19 +11,34 @@ namespace MobileStore.Models
         }
         public MobileStoreDbContext(DbContextOptions<MobileStoreDbContext> options) : base(options)
         {
-            
+
             Database.EnsureCreated();
+            
             if (!Roles.Any())
             {
-                Roles.AddRangeAsync(new Role() { Id = 0, Name = "Admin" },
-                    new Role() { Id = 1, Name = "User" });
+                Roles.AddRange(new Role() { Id = 1, Name = "Admin" },
+                    new Role() { Id = 2, Name = "User" });
             }
-            if (Products.Any())
+            if (!Products.Any())
             {
-                Products.AddRangeAsync(new Product() { Id = 0, Name = "Iphone" },
-                    new Product() { Id = 1, Name = "Samsung" },
-                    new Product() { Id = 2, Name = "Pixel" });
+                Products.AddRange(
+                    new Product()
+                    {
+                        Name = "Iphone",
+                        PriceUSD = 100
+                    },
+                    new Product()
+                    {
+                        Name = "Samsung",
+                        PriceUSD = 150
+                    },
+                    new Product()
+                    {
+                        Name = "Pixel",
+                        PriceUSD = 200
+                    });
             }
+            SaveChanges();
         }
 
         public DbSet<Order> Orders { get; set; }
@@ -68,7 +83,6 @@ namespace MobileStore.Models
                 entity.HasKey(e => e.Id);
 
                 entity.HasIndex(e => e.Name).IsUnique();
-                entity.HasIndex(e => e.PriceUSD).IsUnique();
 
                 entity.Property(e => e.PriceUSD)
                 .IsRequired();
