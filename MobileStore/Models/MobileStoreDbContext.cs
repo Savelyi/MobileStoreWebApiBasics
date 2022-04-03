@@ -11,7 +11,7 @@ namespace MobileStore.Models
         }
         public MobileStoreDbContext(DbContextOptions<MobileStoreDbContext> options) : base(options)
         {
-            Database.EnsureDeleted();
+            
             Database.EnsureCreated();
             if (!Roles.Any())
             {
