@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MobileStore.DTO;
 using MobileStore.DTO.InfoModelsToShow;
 using MobileStore.DTO.ModelsToShow;
 using MobileStore.Models;
@@ -88,13 +89,22 @@ namespace MobileStore.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpGet("/Accounts/{userId:int}")]
-        public async Task<IActionResult> GetAnyUserInfo(int userId=5)
+        public async Task<IActionResult> GetAnyUserInfo(int userId)
         {
             var user = await db.Users.Include(u => u.Orders)
-                            .ThenInclude(o => o.Product)
-                            .FirstOrDefaultAsync(u => u.Id == userId);
+                .ThenInclude(o => o.Product)
+                .Include(u=>u.Role)
+               .FirstOrDefaultAsync(u => u.Id == userId);
 
-            return user == null ? NotFound("User With This Id Does not exist") : Json(user);
+            UserInfoToShowAdminDto userInfo = new UserInfoToShowAdminDto(user)
+            {
+                Name=user.UserName,
+                Password=user.Password,
+                UserRole=user.Role.Name,
+            };
+            
+
+            return user == null ? NotFound("User With This Id Does not exist") : Json(userInfo);
         }
 
 
