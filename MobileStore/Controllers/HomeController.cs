@@ -50,22 +50,22 @@ namespace MobileStore.Controllers
         }
 
 
-        [HttpGet("/MyAccount/About")]
-        public async Task<IActionResult> GetUserInfo()
-        {
+        //[HttpGet("/MyAccount/About")]
+        //public async Task<IActionResult> GetUserInfo()
+        //{
 
-            User user = await db.Users.Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
+        //    User user = await db.Users.Include(u => u.Role)
+        //        .FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
 
-            var userInfo = new UserInfoToShowDto()
-            {
-                Name = User.Identity.Name,
-                Password = user.Password,
-                UserRole = user.Role.Name
+        //    var userInfo = new UserInfoToShowDto()
+        //    {
+        //        Name = User.Identity.Name,
+        //        Password = user.Password,
+        //        UserRole = user.Role.Name
 
-            };
-            return Json(userInfo);
-        }
+        //    };
+        //    return Json(userInfo);
+        //}
 
 
         [HttpGet("/MyAccount/Orders")]
@@ -87,25 +87,25 @@ namespace MobileStore.Controllers
             return Json(orders);
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpGet("/Accounts/{userId:int}")]
-        public async Task<IActionResult> GetAnyUserInfo(int userId)
-        {
-            var user = await db.Users.Include(u => u.Orders)
-                .ThenInclude(o => o.Product)
-                .Include(u=>u.Role)
-               .FirstOrDefaultAsync(u => u.Id == userId);
+        //[Authorize(Roles = "Admin")]
+        //[HttpGet("/Accounts/{userId:int}")]
+        //public async Task<IActionResult> GetAnyUserInfo(int userId)
+        //{
+        //    var user = await db.Users.Include(u => u.Orders)
+        //        .ThenInclude(o => o.Product)
+        //        .Include(u=>u.Role)
+        //       .FirstOrDefaultAsync(u => u.Id == userId);
 
-            UserInfoToShowAdminDto userInfo = new UserInfoToShowAdminDto(user)
-            {
-                Name=user.UserName,
-                Password=user.Password,
-                UserRole=user.Role.Name,
-            };
+        //    UserInfoToShowAdminDto userInfo = new UserInfoToShowAdminDto(user)
+        //    {
+        //        Name=user.UserName,
+        //        Password=user.Password,
+        //        UserRole=user.Role.Name,
+        //    };
             
 
-            return user == null ? NotFound("User With This Id Does not exist") : Json(userInfo);
-        }
+        //    return user == null ? NotFound("User With This Id Does not exist") : Json(userInfo);
+        //}
 
 
     }

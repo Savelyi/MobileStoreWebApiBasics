@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,10 +18,13 @@ namespace MobileStore.Controllers
     [ApiController]
     public class AccountController : Controller
     {
-        MobileStoreDbContext db;
-        public AccountController(MobileStoreDbContext context)
+        
+        readonly UserManager<IdentityUser> _userManager;
+        readonly SignInManager<IdentityUser> _signInManager;
+        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
         {
-            db = context;
+            this._signInManager = signInManager;
+            this._userManager = userManager;
         }
         [HttpPost("/SignIn")]
         public async Task<IActionResult> SignIn(UserForSignInDTO userDto)
@@ -29,64 +33,80 @@ namespace MobileStore.Controllers
             {
                 return BadRequest(new { errorText = "ValidationError" });
             }
-            var user = await GetIdentity(userDto);
-            if (user == null)
+
+            var result = await _signInManager.PasswordSignInAsync(userDto.UserName, userDto.Password,
+                false, false);
+            if (result.Succeeded)
             {
-                return BadRequest(new { errorText = "Invalid username or password." });
+                if (!string.IsNullOrEmpty(userDto.ReturnUrl) &&
+                    Url.IsLocalUrl(userDto.ReturnUrl))
+                {
+                    return Redirect(userDto.ReturnUrl);
+                }
+                else
+                {
+                    return RedirectToAction("ShowProducts", "Home");
+                }
             }
-            var encodedJwt = Authenticate(user.UserName,db.Roles.FirstOrDefault(r => r.Id == user.RoleId).Name);
-
-
-
-            var response = new
+            return BadRequest(new
             {
-                access_token = encodedJwt,
-                username = user.UserName
-            };
-
-            return Ok(response);
+                errorText = "Incorrect Username or Password"
+            });
+            //var response = new
+            //{
+            //    access_token = encodedJwt,
+            //    username = user.UserName
+            //};
         }
-        [Route("/SignUp")]
-        [HttpPost]
+        
+        [HttpPost("/SignUp")]
         public async Task<IActionResult> SignUp(UserForSignUpDTO userDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { errorText = "ValidationError" });
             }
-            var user = await GetIdentity(userDto);
-            if (user != null)
-            {
-                return BadRequest(new
-                {
-                    errorText = "User already exists"
-                });
-            }
-            user=new User
+
+            //if (user != null)
+            //{
+            //    return BadRequest(new
+            //    {
+            //        errorText = "User already exists"
+            //    });
+            //}
+            var user = new User
             {
                 UserName = userDto.UserName,
-                RoleId = userDto.RoleId,
-                Password = userDto.Password
+
             };
-            db.Users.Add(user);
-            await db.SaveChangesAsync();
-            
-            var encodedJwt = Authenticate(user.UserName,db.Roles.FirstOrDefault(r=>r.Id==user.RoleId).Name);
-            var response = new
+            var result = await _userManager.CreateAsync(user, userDto.Password);
+            //var encodedJwt = Authenticate(user.UserName,db.Roles.FirstOrDefault(r=>r.Id==user.RoleId).Name);
+            //var response = new
+            //{
+            //    access_token = encodedJwt,
+            //    username = user.UserName
+            //};
+            if (result.Succeeded)
             {
-                access_token = encodedJwt,
-                username = user.UserName
-            };
-            return Ok(response);
+                await _signInManager.SignInAsync(user, false/*,"Authenticate"*/);
+                return Ok();
+            }
+            return BadRequest(new
+            {
+                errorText = "User already exists"
+            });
 
         }
 
-        private async Task<User> GetIdentity(AuthorizeModel model)
+        [HttpPost("/SignOut")]
+        public async Task<IActionResult> Logout()
         {
-            return await db.Users.FirstOrDefaultAsync(x => x.UserName == model.UserName && x.Password == model.Password);
-
+            // удаляем аутентификационные куки
+            await _signInManager.SignOutAsync();
+            return Ok();
         }
-        private static string Authenticate(string username,string role)
+        
+        private static string Authenticate(string username, string role)
         {
 
             var claims = new List<Claim>

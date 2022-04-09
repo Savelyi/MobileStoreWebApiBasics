@@ -7,6 +7,6 @@ namespace MobileStore.DTO.ModelsToAuthorize
         [Compare("Password",ErrorMessage ="Passwords dont match")]
         public string ConfirmPassword { get; set; }
 
-        public int RoleId { get; } = 2;
+        
     }
 }

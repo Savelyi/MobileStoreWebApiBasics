@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace MobileStore.Models
 {
-    public class MobileStoreDbContext : DbContext
+    public class MobileStoreDbContext : IdentityDbContext<User>
     {
         public MobileStoreDbContext()
         {
@@ -11,52 +13,22 @@ namespace MobileStore.Models
         }
         public MobileStoreDbContext(DbContextOptions<MobileStoreDbContext> options) : base(options)
         {
-
             Database.EnsureCreated();
-            
-            if (!Roles.Any())
-            {
-                Roles.AddRange(new Role() { Id = 1, Name = "Admin" },
-                    new Role() { Id = 2, Name = "User" });
-            }
-            if (!Products.Any())
-            {
-                Products.AddRange(
-                    new Product()
-                    {
-                        Name = "Iphone",
-                        PriceUSD = 100
-                    },
-                    new Product()
-                    {
-                        Name = "Samsung",
-                        PriceUSD = 150
-                    },
-                    new Product()
-                    {
-                        Name = "Pixel",
-                        PriceUSD = 200
-                    });
-            }
-            SaveChanges();
         }
 
         public DbSet<Order> Orders { get; set; }
 
         public DbSet<Product> Products { get; set; }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Role>(entity =>
+            modelBuilder.Entity<User>(e =>
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired();
-
+                e.Property(e=>e.UserName).IsRequired();
+                e.Property(e=>e.PasswordHash).IsRequired();
             });
-
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -90,24 +62,7 @@ namespace MobileStore.Models
                 .IsRequired();
             });
 
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.HasOne(e => e.Role)
-                .WithMany(r => r.Users)
-                .HasForeignKey(e => e.RoleId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasKey(e => e.Id);
-
-                entity.HasIndex(e => e.UserName).IsUnique();
-                entity.HasIndex(e => e.Password).IsUnique();
-
-                entity.Property(e => e.UserName).IsRequired();
-                entity.Property(e => e.Password).IsRequired();
-                entity.Property(e => e.RoleId).IsRequired();
-
-
-            });
+            base.OnModelCreating(modelBuilder);
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
