@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace MobileStore
+namespace MobileStore.Utils.Authenticate
 {
     public class AuthOptions
     {

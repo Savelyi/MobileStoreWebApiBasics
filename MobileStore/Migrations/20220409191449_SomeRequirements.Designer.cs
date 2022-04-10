@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using MobileStore.Models;
+using MobileStore.Utils.Authenticate.Models;
 
-namespace MobileStore.Migrations
+namespace MobileStore.Utils.Authenticate.Migrations
 {
     [DbContext(typeof(MobileStoreDbContext))]
     [Migration("20220409191449_SomeRequirements")]

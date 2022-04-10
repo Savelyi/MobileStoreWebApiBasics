@@ -19,7 +19,7 @@ namespace MobileStore.Controllers
     [ApiController]
     public class HomeController : Controller
     {
-        MobileStoreDbContext db;
+        readonly MobileStoreDbContext db;
         public HomeController(MobileStoreDbContext context)
         {
             db = context;
