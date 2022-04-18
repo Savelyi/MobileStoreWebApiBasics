@@ -9,7 +9,9 @@ namespace MobileStore.DTO
         public UserInfoToShowAdminDto(User user)
         {
             UserOrders = GetOrdersId(user);
+            
         }
+       
         public IEnumerable<UserOrdersToShowExtension> UserOrders { get; set; }
 
 

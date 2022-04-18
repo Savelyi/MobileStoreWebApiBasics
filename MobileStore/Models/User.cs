@@ -11,6 +11,7 @@ namespace MobileStore.Models
             Orders = new HashSet<Order>();
         }
         
+        
         public virtual ICollection<Order> Orders { get; set; }
 
 

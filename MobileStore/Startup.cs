@@ -64,6 +64,7 @@ namespace MobileStore
             );
             services.AddIdentity<User, IdentityRole>(options =>
             {
+                options.SignIn.RequireConfirmedAccount = true;
                 options.Password.RequiredLength = 5;
                 options.Password.RequireNonAlphanumeric = false;   // требуются ли не алфавитно-цифровые символы
                 options.Password.RequireLowercase = false; // требуются ли символы в нижнем регистре

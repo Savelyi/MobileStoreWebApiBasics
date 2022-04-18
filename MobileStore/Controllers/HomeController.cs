@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MobileStore.DTO;
@@ -7,6 +9,7 @@ using MobileStore.DTO.InfoModelsToShow;
 using MobileStore.DTO.ModelsToShow;
 using MobileStore.Models;
 using MobileStore.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -14,20 +17,22 @@ using System.Threading.Tasks;
 
 namespace MobileStore.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class HomeController : Controller
     {
+        readonly UserManager<User> userManager;
         readonly MobileStoreDbContext db;
-        public HomeController(MobileStoreDbContext context)
+        public HomeController(UserManager<User> manager, MobileStoreDbContext context)
         {
+            userManager = manager;
             db = context;
         }
 
         [AllowAnonymous]
         [HttpGet("/Products/{orderby?}")]
-        public IActionResult ShowProducts(ProductsShowSortOrder orderby)
+        public IActionResult ShowProducts([FromQuery] ProductsShowSortOrder orderby)
         {
 
 
@@ -50,30 +55,29 @@ namespace MobileStore.Controllers
         }
 
 
-        //[HttpGet("/MyAccount/About")]
-        //public async Task<IActionResult> GetUserInfo()
-        //{
+        [HttpGet("/MyAccount/About")]
+        public async Task<IActionResult> GetUserInfo()
+        {
+            var user = await userManager.FindByNameAsync(User.Identity.Name);
+            var userInfo = new UserInfoToShowDto()
+            {
+                Name = user.UserName,
+                UserRoles = await userManager.GetRolesAsync(user)
 
-        //    User user = await db.Users.Include(u => u.Role)
-        //        .FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
-
-        //    var userInfo = new UserInfoToShowDto()
-        //    {
-        //        Name = User.Identity.Name,
-        //        Password = user.Password,
-        //        UserRole = user.Role.Name
-
-        //    };
-        //    return Json(userInfo);
-        //}
+            };
+            return Json(userInfo);
+        }
 
 
         [HttpGet("/MyAccount/Orders")]
         public async Task<IActionResult> GetUserOrders()
         {
-            User user = await db.Users.Include(u => u.Orders)
-                .ThenInclude(o => o.Product)
-               .FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
+            //TODO:asd
+            //var user = await userManager.FindByNameAsync(User.Identity.Name);
+            var user = await db.Users.Include(u => u.Orders)
+                .ThenInclude(p => p.Product).
+                FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
             List<UserOrdersToShowDto> orders = new List<UserOrdersToShowDto>();
             foreach (var order in user.Orders)
             {
@@ -87,25 +91,21 @@ namespace MobileStore.Controllers
             return Json(orders);
         }
 
-        //[Authorize(Roles = "Admin")]
-        //[HttpGet("/Accounts/{userId:int}")]
-        //public async Task<IActionResult> GetAnyUserInfo(int userId)
-        //{
-        //    var user = await db.Users.Include(u => u.Orders)
-        //        .ThenInclude(o => o.Product)
-        //        .Include(u=>u.Role)
-        //       .FirstOrDefaultAsync(u => u.Id == userId);
-
-        //    UserInfoToShowAdminDto userInfo = new UserInfoToShowAdminDto(user)
-        //    {
-        //        Name=user.UserName,
-        //        Password=user.Password,
-        //        UserRole=user.Role.Name,
-        //    };
-            
-
-        //    return user == null ? NotFound("User With This Id Does not exist") : Json(userInfo);
-        //}
+        [Authorize(Roles = "admin")]
+        [HttpGet("/Accounts/{userId}")]
+        public async Task<IActionResult> GetAnyUserInfo([FromRoute] string userId)
+        {
+            //var user = await userManager.FindByIdAsync(userId);
+            var user = await db.Users.Include(u => u.Orders)
+                .ThenInclude(p => p.Product).
+                FirstOrDefaultAsync(u => u.Id == userId);
+            UserInfoToShowAdminDto userInfo = new UserInfoToShowAdminDto(user)
+            {
+                Name = user.UserName,
+                UserRoles = await userManager.GetRolesAsync(user)
+            };
+            return user == null ? NotFound("User With This Id Does not exist") : Json(userInfo);
+        }
 
 
     }

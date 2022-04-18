@@ -20,9 +20,9 @@ namespace MobileStore.Controllers
     public class AccountController : Controller
     {
 
-        readonly UserManager<IdentityUser> _userManager;
+        readonly UserManager<User> _userManager;
 
-        public AccountController(UserManager<IdentityUser> userManager)
+        public AccountController(UserManager<User> userManager)
         {
             this._userManager = userManager;
         }
@@ -41,16 +41,15 @@ namespace MobileStore.Controllers
             }
             await _userManager.AddToRoleAsync(user, "user");
 
-            var encodedJwt = CreateToken(user);
+            var encodedJwt = await CreateTokenAsync(user);
 
             var response = new
             {
                 access_token = encodedJwt,
-                username = user.UserName
+                username = user.UserName,
+                userId = user.Id
             };
             return Ok(response);
-
-
         }
 
         [HttpPost("/SignUp")]
@@ -78,14 +77,9 @@ namespace MobileStore.Controllers
             }
             await _userManager.AddToRoleAsync(user, "user");
             return StatusCode(201);
-
-
-
         }
 
-        
-
-        private async Task<string> CreateToken(IdentityUser user)
+        private async Task<string> CreateTokenAsync(User user)
         {
 
             var claims = new List<Claim>
@@ -95,8 +89,9 @@ namespace MobileStore.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
-                new Claim(ClaimsIdentity.DefaultRoleClaimType, role);
+                claims.Add(new Claim(ClaimsIdentity.DefaultRoleClaimType, role));
             }
+
             ClaimsIdentity identity =
             new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
                 ClaimsIdentity.DefaultRoleClaimType);
@@ -111,8 +106,6 @@ namespace MobileStore.Controllers
                     expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
                     signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
             return new JwtSecurityTokenHandler().WriteToken(jwt);
-
-
         }
     }
 }
