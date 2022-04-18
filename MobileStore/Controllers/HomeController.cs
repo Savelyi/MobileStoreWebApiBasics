@@ -17,9 +17,10 @@ using System.Threading.Tasks;
 
 namespace MobileStore.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Route("api/[controller]")]
+    
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class HomeController : Controller
     {
         readonly UserManager<User> userManager;
@@ -31,7 +32,7 @@ namespace MobileStore.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("/Products/{orderby?}")]
+        [HttpGet("Products/{orderby?}")]
         public IActionResult ShowProducts([FromQuery] ProductsShowSortOrder orderby)
         {
 
@@ -55,7 +56,7 @@ namespace MobileStore.Controllers
         }
 
 
-        [HttpGet("/MyAccount/About")]
+        [HttpGet("MyAccount/About")]
         public async Task<IActionResult> GetUserInfo()
         {
             var user = await userManager.FindByNameAsync(User.Identity.Name);
@@ -69,7 +70,7 @@ namespace MobileStore.Controllers
         }
 
 
-        [HttpGet("/MyAccount/Orders")]
+        [HttpGet("MyAccount/Orders")]
         public async Task<IActionResult> GetUserOrders()
         {
             //TODO:asd
@@ -92,7 +93,7 @@ namespace MobileStore.Controllers
         }
 
         [Authorize(Roles = "admin")]
-        [HttpGet("/Accounts/{userId}")]
+        [HttpGet("Accounts/{userId}")]
         public async Task<IActionResult> GetAnyUserInfo([FromRoute] string userId)
         {
             //var user = await userManager.FindByIdAsync(userId);

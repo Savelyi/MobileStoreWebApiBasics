@@ -22,7 +22,8 @@ namespace MobileStore.Controllers
             userManager = manager;
             db = context;
         }
-        [HttpPost("/Details/{productId?}")]
+
+        [HttpPost("Details/{productId?}")]
         public async Task<IActionResult> Order([FromQuery] int productId)
         {
             var product = db.Products.FirstOrDefault(p => p.Id == productId);

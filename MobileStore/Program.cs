@@ -21,20 +21,11 @@ namespace MobileStore
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                //try
-                //{
-                    var userManager = services.GetRequiredService<UserManager<User>>();
-                    var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                    var dbContext = services.GetRequiredService<MobileStoreDbContext>();
-                    await DbInitializer.InitializeAsync(userManager, rolesManager,dbContext);
-                //}
-                //catch (Exception ex)
-                //{
-                //    var logger = services.GetRequiredService<ILogger<Program>>();
-                //    logger.LogError(ex, "An error occurred while seeding the database.");
-                //}
+                var userManager = services.GetRequiredService<UserManager<User>>();
+                var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                var dbContext = services.GetRequiredService<MobileStoreDbContext>();
+                await DbInitializer.InitializeAsync(userManager, rolesManager, dbContext);
             }
-
             host.Run();
         }
 

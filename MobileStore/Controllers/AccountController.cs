@@ -26,7 +26,7 @@ namespace MobileStore.Controllers
         {
             this._userManager = userManager;
         }
-        [HttpPost("/SignIn")]
+        [HttpPost("SignIn")]
         public async Task<IActionResult> SignIn(UserForSignInDTO userDto)
         {
             if (!ModelState.IsValid)
@@ -52,7 +52,7 @@ namespace MobileStore.Controllers
             return Ok(response);
         }
 
-        [HttpPost("/SignUp")]
+        [HttpPost("SignUp")]
         public async Task<IActionResult> SignUp(UserForSignUpDTO userDto)
         {
             if (!ModelState.IsValid)
