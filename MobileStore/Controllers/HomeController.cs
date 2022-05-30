@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MobileStore.Contracts;
 using MobileStore.DTO;
 using MobileStore.DTO.InfoModelsToShow;
 using MobileStore.DTO.ModelsToShow;
 using MobileStore.Models;
+using MobileStore.Repository;
 using MobileStore.Utils;
 using System;
 using System.Collections.Generic;
@@ -24,11 +26,11 @@ namespace MobileStore.Controllers
     public class HomeController : Controller
     {
         readonly UserManager<User> userManager;
-        readonly MobileStoreDbContext db;
-        public HomeController(UserManager<User> manager, MobileStoreDbContext context)
+        readonly IRepositoryManager _repositoryManager;
+        public HomeController(UserManager<User> manager, IRepositoryManager repositoryManager)
         {
+            _repositoryManager = repositoryManager;
             userManager = manager;
-            db = context;
         }
 
         [AllowAnonymous]
@@ -36,14 +38,12 @@ namespace MobileStore.Controllers
         public IActionResult ShowProducts([FromQuery] ProductsShowSortOrder orderby)
         {
 
-
-            var products =
-               from prs in db.Products
-               select new ProductsToShowDto
-               {
-                   Name = prs.Name,
-                   PriceUSD = prs.PriceUSD
-               };
+            var products=from prs in (_repositoryManager.Products.GetProducts(false))
+                         select new ProductsToShowDto
+                         {
+                             Name = prs.Name,
+                             PriceUSD = prs.PriceUSD
+                         };
 
             return Json(orderby switch
             {
@@ -73,33 +73,26 @@ namespace MobileStore.Controllers
         [HttpGet("MyAccount/Orders")]
         public async Task<IActionResult> GetUserOrders()
         {
-            //TODO:asd
-            //var user = await userManager.FindByNameAsync(User.Identity.Name);
-            var user = await db.Users.Include(u => u.Orders)
-                .ThenInclude(p => p.Product).
-                FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
 
-            List<UserOrdersToShowDto> orders = new List<UserOrdersToShowDto>();
-            foreach (var order in user.Orders)
+            var orders = _repositoryManager.Orders.GetUserOrders((await userManager.FindByNameAsync(User.Identity.Name)).Id, true);
+            List<UserOrdersToShowDto> ordersToShow = new List<UserOrdersToShowDto>();
+            foreach (var order in orders)
             {
                 var userOrder = new UserOrdersToShowDto()
                 {
                     ProductName = order.Product.Name,
                     Price = order.Product.PriceUSD
                 };
-                orders.Add(userOrder);
+                ordersToShow.Add(userOrder);
             }
-            return Json(orders);
+            return Json(ordersToShow);
         }
 
         [Authorize(Roles = "admin")]
         [HttpGet("Accounts/{userId}")]
         public async Task<IActionResult> GetAnyUserInfo([FromRoute] string userId)
         {
-            //var user = await userManager.FindByIdAsync(userId);
-            var user = await db.Users.Include(u => u.Orders)
-                .ThenInclude(p => p.Product).
-                FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await userManager.FindByIdAsync(userId);
             UserInfoToShowAdminDto userInfo = new UserInfoToShowAdminDto(user)
             {
                 Name = user.UserName,

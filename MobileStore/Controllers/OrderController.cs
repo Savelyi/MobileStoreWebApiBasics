@@ -7,6 +7,8 @@ using MobileStore.Models;
 using System.Linq;
 using System.Threading.Tasks;
 using MobileStore.DTO.InfoModelsToShow;
+using MobileStore.Repository;
+using MobileStore.Contracts;
 
 namespace MobileStore.Controllers
 {
@@ -15,18 +17,19 @@ namespace MobileStore.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        MobileStoreDbContext db;
         UserManager<User> userManager;
-        public OrderController(MobileStoreDbContext context, UserManager<User> manager)
+        IRepositoryManager _repositoryManager;
+        public OrderController(UserManager<User> manager, IRepositoryManager repositoryManager)
         {
             userManager = manager;
-            db = context;
+            _repositoryManager = repositoryManager;
         }
 
         [HttpPost("Details/{productId?}")]
         public async Task<IActionResult> Order([FromQuery] int productId)
         {
-            var product = db.Products.FirstOrDefault(p => p.Id == productId);
+
+            var product = _repositoryManager.Products.GetProduct(productId, false);
             if (product == null)
             {
                 return NotFound("No Product with this Id");
@@ -37,8 +40,8 @@ namespace MobileStore.Controllers
                 ProductId = product.Id,
                 UserId = user.Id
             };
-            db.Orders.Add(order);
-            await db.SaveChangesAsync();
+            _repositoryManager.Orders.CreateOrder(order);
+            _repositoryManager.Save();
             var response = new
             {
                 Price = product.PriceUSD,
